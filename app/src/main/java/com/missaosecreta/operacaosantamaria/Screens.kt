@@ -184,7 +184,7 @@ fun Phase4Screen(onNext: () -> Unit) {
     var message by remember { mutableStateOf("") }
 
     BaseLayout("Fase 4 – Escolhas com consequência") {
-        Text("Você acha que a pista está onde?")
+        Text("Where is the clue?")
         listOf("Quarto", "Cozinha", "Sala").forEach { choice ->
             Button(onClick = {
                 message = if (choice == "Quarto") "Local confirmado." else "Agente… revise sua lógica antes de seguir."
