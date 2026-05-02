@@ -10,7 +10,7 @@ App Android offline em **Kotlin + Jetpack Compose** com 5 fases investigativas e
 ## Como abrir no Android Studio
 1. Abra o Android Studio.
 2. Clique em **Open**.
-3. Selecione a pasta deste projeto (`workana`).
+3. Selecione a pasta raiz do projeto (a pasta que contém `settings.gradle.kts` com `rootProject.name = "MissaoSecreta"`).
 4. Aguarde o **Gradle Sync** finalizar.
 5. Execute no emulador/dispositivo com o botão **Run**.
 
