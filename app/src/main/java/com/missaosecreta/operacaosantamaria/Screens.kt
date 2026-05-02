@@ -51,12 +51,7 @@ fun BaseLayout(title: String, content: @Composable () -> Unit) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text(
-            text = title,
-            color = Color(0xFF7B2CBF),
-            fontSize = 30.sp,
-            fontWeight = FontWeight.ExtraBold
-        )
+        Text(text = title, color = Color(0xFF7B2CBF), fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
         content()
     }
 }
@@ -66,9 +61,7 @@ fun StartScreen(onStart: () -> Unit) {
     BaseLayout("Missão Secreta") {
         Text("Operação Santa Maria", fontSize = 24.sp, color = Color(0xFFFF5EA8), fontWeight = FontWeight.Bold)
         Text("Agente Olga, sua nova missão foi liberada.")
-        Button(onClick = onStart, modifier = Modifier.fillMaxWidth().height(58.dp)) {
-            Text("Iniciar missão")
-        }
+        Button(onClick = onStart, modifier = Modifier.fillMaxWidth().height(58.dp)) { Text("Iniciar missão") }
     }
 }
 
@@ -76,8 +69,9 @@ fun StartScreen(onStart: () -> Unit) {
 fun Phase1Screen(onNext: () -> Unit) {
     var sequence by remember { mutableStateOf(listOf<String>()) }
     var message by remember { mutableStateOf("") }
+    var solved by remember { mutableStateOf(false) }
 
-    // Edite peças e sequência correta desta fase aqui.
+    // FASE 1: personalize peças e sequência correta abaixo.
     val pieces = listOf("📚", "➡️", "🛏️")
     val correctSequence = listOf("📚", "➡️", "🛏️")
 
@@ -87,76 +81,52 @@ fun Phase1Screen(onNext: () -> Unit) {
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             pieces.forEach { piece ->
-                Button(onClick = {
-                    if (sequence.size < 3) sequence = sequence + piece
-                }) {
-                    Text(piece, fontSize = 22.sp)
-                }
+                Button(onClick = { if (sequence.size < 3) sequence = sequence + piece }) { Text(piece, fontSize = 22.sp) }
             }
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = { sequence = emptyList(); message = "" }) { Text("Limpar") }
+            OutlinedButton(onClick = { sequence = emptyList(); message = ""; solved = false }) { Text("Limpar") }
             Button(onClick = {
-                message = if (sequence == correctSequence) {
-                    "A pista está no quarto, perto dos livros."
-                } else {
-                    "A sequência ainda não revela o caminho. Tente outra combinação."
-                }
+                solved = sequence == correctSequence
+                message = if (solved) "A pista está no quarto, perto dos livros."
+                else "A sequência ainda não revela o caminho. Tente outra combinação."
             }) { Text("Confirmar") }
         }
 
         Text(message)
-        if (message.startsWith("A pista")) {
-            Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Próxima fase") }
-        }
+        if (solved) Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Próxima fase") }
     }
 }
 
 @Composable
 fun Phase2Screen(onNext: () -> Unit) {
-    // Edite itens e resposta correta aqui.
+    // FASE 2: personalize itens e combinação correta abaixo.
     val options = listOf("Foto da estante", "Anotação: histórias", "Mapa da casa", "Objeto falso")
+    val correct = setOf("Foto da estante", "Anotação: histórias")
+
     val selected = remember { mutableStateListOf<String>() }
     var message by remember { mutableStateOf("") }
+    var solved by remember { mutableStateOf(false) }
 
     BaseLayout("Fase 2 – Detetive de evidências") {
         options.forEach { item ->
             val isSelected = selected.contains(item)
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        if (isSelected) selected.remove(item) else selected.add(item)
-                    }
-                    .border(
-                        2.dp,
-                        if (isSelected) Color(0xFFFF8C42) else Color(0xFF7B2CBF),
-                        RoundedCornerShape(14.dp)
-                    )
-            ) {
-                Text(item, modifier = Modifier.padding(16.dp))
-            }
+                modifier = Modifier.fillMaxWidth().clickable {
+                    if (isSelected) selected.remove(item) else selected.add(item)
+                }.border(2.dp, if (isSelected) Color(0xFFFF8C42) else Color(0xFF7B2CBF), RoundedCornerShape(14.dp))
+            ) { Text(item, modifier = Modifier.padding(16.dp)) }
         }
 
         Button(onClick = {
-            val ok = selected.contains("Foto da estante") &&
-                selected.contains("Anotação: histórias") &&
-                selected.size == 2
-
-            message = if (ok) {
-                "Boa análise, agente. As evidências apontam para o local certo."
-            } else {
-                "Essas evidências não combinam. Revise sua investigação."
-            }
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text("Analisar evidências")
-        }
+            solved = selected.toSet() == correct
+            message = if (solved) "Boa análise, agente. As evidências apontam para o local certo."
+            else "Essas evidências não combinam. Revise sua investigação."
+        }, modifier = Modifier.fillMaxWidth()) { Text("Analisar evidências") }
 
         Text(message)
-        if (message.startsWith("Boa")) {
-            Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Próxima fase") }
-        }
+        if (solved) Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Próxima fase") }
     }
 }
 
@@ -164,59 +134,55 @@ fun Phase2Screen(onNext: () -> Unit) {
 fun Phase3Screen(onNext: () -> Unit) {
     var answer by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
+    var solved by remember { mutableStateOf(false) }
+
+    // FASE 3: personalize enigma e resposta esperada.
+    val expectedAnswer = "3"
 
     BaseLayout("Fase 3 – Código e criptografia") {
         Text("🐱 = 1\n🐱🐱 = 2\n🐱🐱🐱 = ?", fontSize = 28.sp)
         OutlinedTextField(value = answer, onValueChange = { answer = it }, label = { Text("Resposta") })
         Button(onClick = {
-            message = if (answer.trim() == "3") "Código decifrado." else "Código incorreto. Conte novamente os gatinhos."
+            solved = answer.trim() == expectedAnswer
+            message = if (solved) "Código decifrado." else "Código incorreto. Conte novamente os gatinhos."
         }, modifier = Modifier.fillMaxWidth()) { Text("Verificar código") }
 
         Text(message)
-        if (message.startsWith("Código decifrado")) {
-            Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Próxima fase") }
-        }
+        if (solved) Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Próxima fase") }
     }
 }
 
 @Composable
 fun Phase4Screen(onNext: () -> Unit) {
     var message by remember { mutableStateOf("") }
+    var solved by remember { mutableStateOf(false) }
+
+    // FASE 4: personalize pergunta e opção correta.
+    val correctChoice = "Quarto"
 
     BaseLayout("Fase 4 – Escolhas com consequência") {
         Text("Where is the clue?")
         listOf("Quarto", "Cozinha", "Sala").forEach { choice ->
             Button(onClick = {
-                message = if (choice == "Quarto") "Local confirmado." else "Agente… revise sua lógica antes de seguir."
-            }, modifier = Modifier.fillMaxWidth()) {
-                Text(choice)
-            }
+                solved = choice == correctChoice
+                message = if (solved) "Local confirmado." else "Agente… revise sua lógica antes de seguir."
+            }, modifier = Modifier.fillMaxWidth()) { Text(choice) }
         }
 
         Text(message)
-        if (message.startsWith("Local")) {
-            Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Próxima fase") }
-        }
+        if (solved) Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Próxima fase") }
     }
 }
 
-data class MemoryCard(
-    val id: Int,
-    val symbol: String,
-    val revealed: Boolean = false,
-    val matched: Boolean = false
-)
+data class MemoryCard(val id: Int, val symbol: String, val revealed: Boolean = false, val matched: Boolean = false)
 
 @Composable
 fun Phase5Screen(onNext: () -> Unit) {
-    // Edite cartas e código final aqui.
+    // FASE 5: personalize pares e código final abaixo.
     val symbols = remember { listOf("🐱", "🐱", "🔍", "🔍", "📚", "📚").shuffled(Random(7)) }
-    val cards = remember {
-        mutableStateListOf<MemoryCard>().apply {
-            symbols.forEachIndexed { index, symbol -> add(MemoryCard(index, symbol)) }
-        }
-    }
+    val finalCode = "LIVRO07"
 
+    val cards = remember { mutableStateListOf<MemoryCard>().apply { symbols.forEachIndexed { index, symbol -> add(MemoryCard(index, symbol)) } } }
     var opened by remember { mutableStateOf(listOf<Int>()) }
     var code by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
@@ -232,20 +198,20 @@ fun Phase5Screen(onNext: () -> Unit) {
         opened = opened + index
 
         if (opened.size == 2) {
-            val firstIndex = opened[0]
-            val secondIndex = opened[1]
-            val first = cards[firstIndex]
-            val second = cards[secondIndex]
+            val i1 = opened[0]
+            val i2 = opened[1]
+            val c1 = cards[i1]
+            val c2 = cards[i2]
 
-            if (first.symbol == second.symbol) {
-                cards[firstIndex] = first.copy(matched = true)
-                cards[secondIndex] = second.copy(matched = true)
+            if (c1.symbol == c2.symbol) {
+                cards[i1] = c1.copy(matched = true)
+                cards[i2] = c2.copy(matched = true)
                 opened = emptyList()
             } else {
                 scope.launch {
                     delay(700)
-                    cards[firstIndex] = cards[firstIndex].copy(revealed = false)
-                    cards[secondIndex] = cards[secondIndex].copy(revealed = false)
+                    cards[i1] = cards[i1].copy(revealed = false)
+                    cards[i2] = cards[i2].copy(revealed = false)
                     opened = emptyList()
                 }
             }
@@ -253,20 +219,11 @@ fun Phase5Screen(onNext: () -> Unit) {
     }
 
     BaseLayout("Fase 5 – Memória com pistas escondidas") {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = Modifier.height(220.dp),
-            contentPadding = PaddingValues(4.dp)
-        ) {
+        LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.height(220.dp), contentPadding = PaddingValues(4.dp)) {
             itemsIndexed(cards) { index, card ->
                 Box(
-                    modifier = Modifier
-                        .padding(6.dp)
-                        .size(90.dp)
-                        .background(
-                            if (card.revealed || card.matched) Color(0xFFFFD60A) else Color(0xFF7B2CBF),
-                            RoundedCornerShape(12.dp)
-                        )
+                    modifier = Modifier.padding(6.dp).size(90.dp)
+                        .background(if (card.revealed || card.matched) Color(0xFFFFD60A) else Color(0xFF7B2CBF), RoundedCornerShape(12.dp))
                         .clickable { processCard(index) },
                     contentAlignment = Alignment.Center
                 ) {
@@ -279,10 +236,8 @@ fun Phase5Screen(onNext: () -> Unit) {
             Text("Digite o código final encontrado no local.")
             OutlinedTextField(value = code, onValueChange = { code = it.uppercase() }, label = { Text("Código final") })
             Button(onClick = {
-                if (code.trim() == "LIVRO07") onNext() else message = "Código final inválido. Procure melhor a pista."
-            }, modifier = Modifier.fillMaxWidth()) {
-                Text("Validar")
-            }
+                if (code.trim() == finalCode) onNext() else message = "Código final inválido. Procure melhor a pista."
+            }, modifier = Modifier.fillMaxWidth()) { Text("Validar") }
         }
 
         Text(message)
@@ -294,19 +249,11 @@ fun FinalScreen(onRestart: () -> Unit) {
     BaseLayout("Tela final – Mural da espiã") {
         Text("Parabéns, Agente Olga. Você completou a missão e conquistou todos os troféus do mural da espiã.")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(
-                "🏆 Mestre das pistas",
-                "🏆 Detetive oficial",
-                "🏆 Decifradora de códigos",
-                "🏆 Escolhas precisas",
-                "🏆 Memória de espiã"
-            ).forEach { trophy ->
+            listOf("🏆 Mestre das pistas", "🏆 Detetive oficial", "🏆 Decifradora de códigos", "🏆 Escolhas precisas", "🏆 Memória de espiã").forEach { trophy ->
                 Card { Text(trophy, modifier = Modifier.padding(12.dp)) }
             }
         }
 
-        Button(onClick = onRestart, modifier = Modifier.fillMaxWidth()) {
-            Text("Jogar novamente")
-        }
+        Button(onClick = onRestart, modifier = Modifier.fillMaxWidth()) { Text("Jogar novamente") }
     }
 }

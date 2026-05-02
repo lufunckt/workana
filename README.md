@@ -29,7 +29,7 @@ App Android offline em **Kotlin + Jetpack Compose** com 5 fases investigativas e
 - Sem internet, sem banco de dados, sem bibliotecas complexas.
 
 ## Personalização rápida
-Dentro de `MainActivity.kt`, procure pelos comentários e textos de cada fase para alterar:
+Dentro de `Screens.kt`, procure pelos comentários e textos de cada fase para alterar:
 - perguntas
 - respostas corretas
 - mensagens de sucesso/erro
