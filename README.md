@@ -22,8 +22,10 @@ App Android offline em **Kotlin + Jetpack Compose** com 5 fases investigativas e
 4. O APK ficará em `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Estrutura principal
-- `MainActivity.kt`: tela inicial, fases 1 a 5 e tela final.
-- Progresso salvo localmente em `SharedPreferences` via chave `currentPhase`.
+- `MainActivity.kt`: entrada do app.
+- `GameScreen.kt`: fluxo por `currentPhase` e navegação simples por estado.
+- `Screens.kt`: composables separados para tela inicial, 5 fases e tela final.
+- `ProgressStore.kt`: progresso salvo localmente em `SharedPreferences`.
 - Sem internet, sem banco de dados, sem bibliotecas complexas.
 
 ## Personalização rápida
