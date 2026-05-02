@@ -186,11 +186,14 @@ fun Phase5Screen(onNext: () -> Unit) {
     var opened by remember { mutableStateOf(listOf<Int>()) }
     var code by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
+    var isCheckingPair by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val allMatched = cards.all { it.matched }
 
     fun processCard(index: Int) {
+        if (isCheckingPair) return
+
         val card = cards[index]
         if (card.matched || card.revealed || opened.size == 2) return
 
@@ -198,6 +201,7 @@ fun Phase5Screen(onNext: () -> Unit) {
         opened = opened + index
 
         if (opened.size == 2) {
+            isCheckingPair = true
             val i1 = opened[0]
             val i2 = opened[1]
             val c1 = cards[i1]
@@ -207,12 +211,14 @@ fun Phase5Screen(onNext: () -> Unit) {
                 cards[i1] = c1.copy(matched = true)
                 cards[i2] = c2.copy(matched = true)
                 opened = emptyList()
+                isCheckingPair = false
             } else {
                 scope.launch {
-                    delay(700)
+                    delay(800)
                     cards[i1] = cards[i1].copy(revealed = false)
                     cards[i2] = cards[i2].copy(revealed = false)
                     opened = emptyList()
+                    isCheckingPair = false
                 }
             }
         }
