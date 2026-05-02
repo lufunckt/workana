@@ -32,3 +32,6 @@ Dentro de `MainActivity.kt`, procure pelos comentários e textos de cada fase pa
 - respostas corretas
 - mensagens de sucesso/erro
 - ordem e conteúdo dos desafios
+
+## Observação
+- Não há integração com IA neste app.
