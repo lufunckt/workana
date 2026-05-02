@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 @Composable
@@ -78,10 +81,64 @@ fun Phase3Screen(onNext: () -> Unit) { var answer by remember { mutableStateOf("
 @Composable
 fun Phase4Screen(onNext: () -> Unit) { var message by remember { mutableStateOf("") }; BaseLayout("Fase 4 – Escolhas com consequência") { Text("Você acha que a pista está onde?"); listOf("Quarto", "Cozinha", "Sala").forEach { Button(onClick = { message = if (it == "Quarto") "Local confirmado." else "Agente… revise sua lógica antes de seguir." }, modifier = Modifier.fillMaxWidth()) { Text(it) } }; Text(message); if (message.startsWith("Local")) Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) { Text("Próxima fase") } } }
 
-data class MemoryCard(val id: Int, val symbol: String, var revealed: Boolean = false, var matched: Boolean = false)
+data class MemoryCard(val id: Int, val symbol: String, val revealed: Boolean = false, val matched: Boolean = false)
 
 @Composable
-fun Phase5Screen(onNext: () -> Unit) { val symbols = remember { listOf("🐱", "🐱", "🔍", "🔍", "📚", "📚").shuffled(Random(7)) }; val cards = remember { mutableStateListOf<MemoryCard>().apply { symbols.forEachIndexed { i, s -> add(MemoryCard(i, s)) } } }; var opened by remember { mutableStateOf(listOf<Int>()) }; var code by remember { mutableStateOf("") }; var message by remember { mutableStateOf("") }; val allMatched = cards.all { it.matched }; fun processCard(index: Int) { val card = cards[index]; if (card.matched || card.revealed || opened.size == 2) return; card.revealed = true; opened = opened + index; if (opened.size == 2) { val a = cards[opened[0]]; val b = cards[opened[1]]; if (a.symbol == b.symbol) { a.matched = true; b.matched = true } else { a.revealed = false; b.revealed = false }; opened = emptyList() } }; BaseLayout("Fase 5 – Memória com pistas escondidas") { LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.height(220.dp), contentPadding = PaddingValues(4.dp)) { itemsIndexed(cards) { index, card -> Box(modifier = Modifier.padding(6.dp).size(90.dp).background(if (card.revealed || card.matched) Color(0xFFFFD60A) else Color(0xFF7B2CBF), RoundedCornerShape(12.dp)).clickable { processCard(index) }, contentAlignment = Alignment.Center) { Text(if (card.revealed || card.matched) card.symbol else "❓", fontSize = 30.sp, color = Color.Black) } } }; if (allMatched) { Text("Digite o código final encontrado no local."); OutlinedTextField(value = code, onValueChange = { code = it.uppercase() }, label = { Text("Código final") }); Button(onClick = { if (code.trim() == "LIVRO07") onNext() else message = "Código final inválido. Procure melhor a pista." }, modifier = Modifier.fillMaxWidth()) { Text("Validar") } }; Text(message) } }
+fun Phase5Screen(onNext: () -> Unit) {
+    val symbols = remember { listOf("🐱", "🐱", "🔍", "🔍", "📚", "📚").shuffled(Random(7)) }
+    val cards = remember { mutableStateListOf<MemoryCard>().apply { symbols.forEachIndexed { i, sym -> add(MemoryCard(i, sym)) } } }
+    var opened by remember { mutableStateOf(listOf<Int>()) }
+    var code by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    val allMatched = cards.all { it.matched }
+
+    fun processCard(index: Int) {
+        val card = cards[index]
+        if (card.matched || card.revealed || opened.size == 2) return
+
+        // Substituímos o objeto na lista para garantir recomposição no Compose.
+        cards[index] = card.copy(revealed = true)
+        opened = opened + index
+
+        if (opened.size == 2) {
+            val idx1 = opened[0]
+            val idx2 = opened[1]
+            val a = cards[idx1]
+            val b = cards[idx2]
+
+            if (a.symbol == b.symbol) {
+                cards[idx1] = a.copy(matched = true)
+                cards[idx2] = b.copy(matched = true)
+                opened = emptyList()
+            } else {
+                // Pequeno atraso para a criança enxergar a segunda carta antes de virar.
+                scope.launch {
+                    delay(700)
+                    cards[idx1] = cards[idx1].copy(revealed = false)
+                    cards[idx2] = cards[idx2].copy(revealed = false)
+                    opened = emptyList()
+                }
+            }
+        }
+    }
+
+    BaseLayout("Fase 5 – Memória com pistas escondidas") {
+        LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.height(220.dp), contentPadding = PaddingValues(4.dp)) {
+            itemsIndexed(cards) { index, card ->
+                Box(modifier = Modifier.padding(6.dp).size(90.dp).background(if (card.revealed || card.matched) Color(0xFFFFD60A) else Color(0xFF7B2CBF), RoundedCornerShape(12.dp)).clickable { processCard(index) }, contentAlignment = Alignment.Center) {
+                    Text(if (card.revealed || card.matched) card.symbol else "❓", fontSize = 30.sp, color = Color.Black)
+                }
+            }
+        }
+        if (allMatched) {
+            Text("Digite o código final encontrado no local.")
+            OutlinedTextField(value = code, onValueChange = { code = it.uppercase() }, label = { Text("Código final") })
+            Button(onClick = { if (code.trim() == "LIVRO07") onNext() else message = "Código final inválido. Procure melhor a pista." }, modifier = Modifier.fillMaxWidth()) { Text("Validar") }
+        }
+        Text(message)
+    }
+}
 
 @Composable
 fun FinalScreen(onRestart: () -> Unit) { BaseLayout("Tela final – Mural da espiã") { Text("Parabéns, Agente Olga. Você completou a missão e conquistou todos os troféus do mural da espiã."); FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { listOf("🏆 Mestre das pistas", "🏆 Detetive oficial", "🏆 Decifradora de códigos", "🏆 Escolhas precisas", "🏆 Memória de espiã").forEach { Card { Text(it, modifier = Modifier.padding(12.dp)) } } }; Button(onClick = onRestart, modifier = Modifier.fillMaxWidth()) { Text("Jogar novamente") } } }
